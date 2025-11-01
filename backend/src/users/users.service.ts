@@ -1,26 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UsersRepository } from './users.repository';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly repository: UsersRepository) {}
+
+  async create(dto: CreateUserDto){
+    // 1. Lógica: Verificar se o email já existe
+    const existingUser = await this.repository.findByEmail(dto.email);
+    if (existingUser) {
+      throw new ConflictException('Um usuário com este email já existe.');
+    }
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(dto.password, saltRounds);
+
+    // 3. Chamar o repositório para salvar no banco
+    const user = await this.repository.create(dto, hashedPassword);
+    return user;
+
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.repository.findAll()
+  }
+ 
+  findOne(id: string) {
+    return this.repository.findById(id) ;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  update(id: string, updateUserDto: UpdateUserDto) {
+    return this.repository.update(id, updateUserDto);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(id: string) {
+    return this.repository.delete(id);
   }
 }
