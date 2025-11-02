@@ -6,6 +6,7 @@ import { PackagesModule } from '../packages/packages.module';
 import {ConfigModule} from '@nestjs/config';
 import { PrismaModule } from '../common/database/prisma.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 
 @Module({
@@ -13,7 +14,9 @@ import { AuthModule } from 'src/auth/auth.module';
      PrismaModule,
       UsersModule,
        PackagesModule,
-      AuthModule],
+      AuthModule,
+      WebhooksModule
+    ],
   controllers: [AppController],
   providers: [AppService],
 })

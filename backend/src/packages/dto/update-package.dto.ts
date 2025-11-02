@@ -1,4 +1,10 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreatePackageDto } from './create-package.dto';
 
-export class UpdatePackageDto extends PartialType(CreatePackageDto) {}
+
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+
+export class UpdatePackageDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional() 
+  name?: string;
+}
