@@ -13,4 +13,27 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  packages  Package[]
+}
+model Package {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  name         String // "Tênis da Nike"
+  trackingCode String // "PW123456789BR"
+  status       String // "Em trânsito", "Entregue" (vamos buscar isso da API externa)
+  
+  // Vamos guardar o histórico de eventos da API externa aqui
+  timeline     Json   @default("[]") 
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // --- RELACIONAMENTO ---
+  // Este campo guarda o ID do dono do pacote
+  userId String @db.ObjectId
+  // 'user' é a "ponte" para o modelo User, usando o campo 'userId'
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // O trackingCode deve ser único POR USUÁRIO
+  @@unique([userId, trackingCode])
 }

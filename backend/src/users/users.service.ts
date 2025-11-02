@@ -17,26 +17,25 @@ export class UsersService {
     }
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(dto.password, saltRounds);
-
     // 3. Chamar o repositório para salvar no banco
     const user = await this.repository.create(dto, hashedPassword);
     return user;
 
   }
-
-  findAll() {
-    return this.repository.findAll()
+  async findByEmailForAuth(email:string){
+    return await this.repository.findByEmail(email)
+  }
+  async findAll() {
+    return await this.repository.findAll()
   }
  
-  findOne(id: string) {
-    return this.repository.findById(id) ;
+  async findOne(id: string) {
+    return await this.repository.findById(id) ;
   }
-
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return this.repository.update(id, updateUserDto);
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    return await this.repository.update(id, updateUserDto);
   }
-
-  remove(id: string) {
-    return this.repository.delete(id);
+  async remove(id: string) {
+    return await this.repository.delete(id);
   }
 }
