@@ -4,11 +4,19 @@ import { Colors, Fonts, Sizes } from '../constants/theme';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import { LoginScreenProps } from '../navigation/types';
+import { useAuth } from '../hooks/useAuth';
 
 const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login, isLoading } = useAuth();
 
+  const handleLogin = async () => {
+    const success = await login(email, password);
+
+    // A navegação agora será controlada pelo AppNavigator,
+    // que reagirá à mudança de estado no AuthContext.
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -42,8 +50,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         </TouchableOpacity>
 
         <CustomButton
+          isLoading={isLoading}
           title="Entrar"
-          onPress={() => navigation.navigate('Home')}
+          onPress={handleLogin}
         />
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>

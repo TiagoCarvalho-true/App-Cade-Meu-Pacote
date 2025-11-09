@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors, Fonts, Sizes } from '../constants/theme';
 import PackageItem from '../components/PackageItem';
 import AddPackageModal from '../components/addPackageModal';
 import { HomeScreenProps } from '../navigation/types';
+import { useAuthContext } from '../contexts/AuthContext';
+import { usePackages } from '../hooks/usePackages';
 
+// Mantemos os dados mocados para visualização, como solicitado.
 const mockPackages = [
   {
     id: '1',
@@ -23,6 +26,31 @@ const mockPackages = [
 
 const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const [isModalVisible, setModalVisible] = useState(false);
+  const [packages, setPackages] = useState([]); // 1. Estado para os pacotes da API
+  const { user } = useAuthContext(); // 1. Pegamos os dados do usuário do contexto.
+  const { getPackages, isLoading } = usePackages(); // 2. Usamos nosso hook de pacotes.
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      const dataFromApi = await getPackages();
+
+      if (dataFromApi) {
+        // 2. Atualizamos o estado com os dados recebidos da API
+        setPackages(dataFromApi);
+      }
+    };
+
+    fetchPackages();
+  }, [getPackages]); // O useEffect será executado quando o componente montar.
+
+  // Função para pegar as iniciais do nome do usuário.
+  const getInitials = (name: string | undefined) =>
+    name
+      ?.split(' ')
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,27 +59,33 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
         <View style={styles.header}>
           <Icon name="map-marker-outline" size={32} color={Colors.primary} />
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>BM</Text>
+            {/* 3. Usamos as iniciais do usuário logado. */}
+            <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
           </View>
         </View>
 
         <Text style={styles.title}>Pacotes</Text>
         <View style={styles.divider} />
 
-        <FlatList
-          data={mockPackages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.navigate('PackageDetails', { packageId: item.id })}>
-              <PackageItem
-                title={item.title}
-                subtitle={item.subtitle}
-                storeIcon={item.storeIcon}
-                onPressInfo={() => navigation.navigate('PackageDetails', { packageId: item.id })}
-              />
-            </TouchableOpacity>
-          )}
-        />
+        {/* 4. Mostramos um indicador de carregamento enquanto a busca acontece em segundo plano. */}
+        {isLoading && <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />}
+
+        {!isLoading && (
+          <FlatList
+            data={packages} // 3. Usamos o estado 'packages' em vez dos dados mocados
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => navigation.navigate('PackageDetails', { packageId: item.id })}>
+                <PackageItem
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  storeIcon={item.storeIcon}
+                  onPressInfo={() => navigation.navigate('PackageDetails', { packageId: item.id })}
+                />
+              </TouchableOpacity>
+            )}
+          />
+        )}
       </View>
 
       <View style={styles.fabContainer}>

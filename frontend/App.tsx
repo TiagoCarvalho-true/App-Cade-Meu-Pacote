@@ -6,6 +6,7 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 
+import { AuthProvider } from './src/contexts/AuthContext';
 import RootNavigator from './src/navigation'; // 1. Importe o seu navegador
 
 export default function App() {
@@ -22,8 +23,12 @@ export default function App() {
     );
   }
 
-  // 2. Renderize o navegador em vez do texto de teste
-  return <RootNavigator />;
+  // 2. Envolvemos o navegador com o AuthProvider
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
 }
 
 const styles = StyleSheet.create({

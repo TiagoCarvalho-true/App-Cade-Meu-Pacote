@@ -4,6 +4,7 @@ import { Colors, Fonts, Sizes } from '../constants/theme';
 
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
+  isLoading?: boolean;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({ title, ...props }) => {
@@ -21,6 +22,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     marginVertical: 10,
+    opacity: 1,
   },
   text: {
     color: Colors.white,
