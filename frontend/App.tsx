@@ -25,6 +25,7 @@ export default function App() {
 
   // 2. Envolvemos o navegador com o AuthProvider
   return (
+    //proteção de Navegação
     <AuthProvider>
       <RootNavigator />
     </AuthProvider>

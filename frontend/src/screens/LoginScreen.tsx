@@ -52,7 +52,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         <CustomButton
           isLoading={isLoading}
           title="Entrar"
-          onPress={handleLogin}
+          onPress={() => navigation.navigate('Home')}
         />
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
