@@ -1,4 +1,3 @@
-// ...existing code...
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
@@ -11,7 +10,8 @@ export type RootStackParamList = {
 };
 
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
-// ...existing code...
 export type AllPackagesScreenProps = NativeStackScreenProps<RootStackParamList, 'AllPackages'>;
 export type PackageDetailsScreenProps = NativeStackScreenProps<RootStackParamList, 'PackageDetails'>;
 export type ConfigurationScreenProps = NativeStackScreenProps<RootStackParamList, 'Configuration'>;
+export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>;
