@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
@@ -17,7 +18,8 @@
     "baseUrl": "./",
     "paths": {
       "src/*": ["src/*"]
-    },
+    },"rootDir": "./src",
+   
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
