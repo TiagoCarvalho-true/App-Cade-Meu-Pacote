@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "955704984969",
+    "project_id": "cade-meu-pacote",
+    "storage_bucket": "cade-meu-pacote.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:955704984969:android:579fa13fd455a6890c8d58",
+        "android_client_info": {
+          "package_name": "com.seuapp.cademeupacote"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "955704984969-0i17aighfaf4ka1okh7tvpihmi7tttoi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzmkb8FHhqk9bkusQyarc_b9tnbjHNzOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "955704984969-0i17aighfaf4ka1okh7tvpihmi7tttoi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "955704984969-h4udqr4k8lr8u5gnn2kvbl7o8s34ed50.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.seuapp.cademeupacote"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

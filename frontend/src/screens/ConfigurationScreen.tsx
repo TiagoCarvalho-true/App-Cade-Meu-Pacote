@@ -1,24 +1,26 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import { Colors, Fonts, Sizes } from '../constants/theme';
 import CustomButton from '../components/CustomButton';
+import { useAuth } from '../hooks/useAuth';
+import { usePackages } from '../hooks/usePackages';
 import { ConfigurationScreenProps } from '../navigation/types';
 
-// Mock de dados do usuário. Substitua pela sua lógica de autenticação (context, store, etc.)
-const user = {
-  name: 'Bruno Marinho',
-  email: 'brunomarinho@gmail.com',
-};
+export default function ConfigurationScreen({ navigation }: ConfigurationScreenProps) {
+  const { user, signOut } = useAuth();
+  const { packages } = usePackages();
 
-const orderStats = {
-  total: 6,
-  delivered: 2,
-  inTransit: 2,
-  canceled: 2,
-};
-
-const ConfigurationScreen = ({ navigation }: ConfigurationScreenProps) => {
   const getInitials = (name: string) =>
     name
       .split(' ')
@@ -26,6 +28,22 @@ const ConfigurationScreen = ({ navigation }: ConfigurationScreenProps) => {
       .slice(0, 2)
       .join('')
       .toUpperCase();
+
+  const orderStats = useMemo(() => {
+    return {
+      total: packages.length,
+      delivered: packages.filter((p) => p.status === 'delivered').length,
+      inTransit: packages.filter((p) => p.status === 'in_transit').length,
+      canceled: packages.filter((p) => p.status === 'canceled').length,
+    };
+  }, [packages]);
+
+  const handleSignOut = () => {
+    Alert.alert('Sair', 'Você tem certeza que deseja sair da sua conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: signOut },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -39,30 +57,29 @@ const ConfigurationScreen = ({ navigation }: ConfigurationScreenProps) => {
 
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{getInitials(user.name)}</Text>
+            <Text style={styles.avatarText}>{getInitials(user?.name || '??')}</Text>
           </View>
-          <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
+          <Text style={styles.name}>{user?.name || 'Usuário'}</Text>
+          <Text style={styles.email}>{user?.email || 'email@exemplo.com'}</Text>
         </View>
 
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>Histórico de Pedidos</Text>
           <View style={styles.statsContainer}>
-            <Text style={styles.statText}>Total de Pedidos: {orderStats.total} Pedidos</Text>
-            <Text style={styles.statText}>Pedidos Entregues: {orderStats.delivered} Pedidos</Text>
-            <Text style={styles.statText}>Pedidos a caminho: {orderStats.inTransit} Pedidos</Text>
-            <Text style={styles.statText}>Pedidos Cancelados: {orderStats.canceled} Pedidos</Text>
+            <Text style={styles.statText}>Total de Pedidos: {orderStats.total}</Text>
+            <Text style={styles.statText}>Pedidos Entregues: {orderStats.delivered}</Text>
+            <Text style={styles.statText}>Pedidos a caminho: {orderStats.inTransit}</Text>
+            <Text style={styles.statText}>Pedidos Cancelados: {orderStats.canceled}</Text>
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
-          <CustomButton title="Trocar de Conta" onPress={() => { /* Lógica para trocar de conta */ }} />
-          <CustomButton title="Sair da conta" onPress={() => { /* Lógica para sair */ }} />
+          <CustomButton title="Sair da conta" onPress={handleSignOut} variant="danger" />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -74,9 +91,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingVertical: 15,
   },
   profileSection: {
@@ -87,26 +101,25 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: Colors.lightGray, // Cor do círculo do avatar
+    backgroundColor: Colors.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
   },
   avatarText: {
-    color: Colors.primary, // Cor do texto dentro do avatar
+    color: Colors.primary,
     fontFamily: Fonts.bold,
     fontSize: 32,
   },
   name: {
     fontFamily: Fonts.bold,
     color: Colors.white,
-    fontSize: Sizes.h3,
+    fontSize: Sizes.h2,
   },
   email: {
     fontFamily: Fonts.regular,
-    color: Colors.white,
-    fontSize: Sizes.h2,
-    textDecorationLine: 'underline',
+    color: Colors.gray,
+    fontSize: Sizes.body3,
     marginTop: 5,
   },
   historySection: {
@@ -129,7 +142,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 15,
+    paddingBottom: 40,
   },
 });
-
-export default ConfigurationScreen;

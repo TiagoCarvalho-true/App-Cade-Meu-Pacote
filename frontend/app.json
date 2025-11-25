@@ -14,7 +14,8 @@
       "src/assets/**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +23,8 @@
         "backgroundColor": "#ffffff",
         "package": "com.seuapp.cademeupacote"
       },
-      "package": "com.bruno_marinho.frontend"
+      "package": "com.seuapp.cademeupacote",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -31,6 +33,10 @@
       "eas": {
         "projectId": "b79c2a32-e14f-428d-ac08-3a6717e11067"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-google-signin/google-signin"
+    ],
+    "owner": "bruno_marinho"
   }
 }

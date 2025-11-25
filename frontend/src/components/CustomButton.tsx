@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps } from 'react-native';
+import icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors, Fonts, Sizes } from '../constants/theme';
 
 interface CustomButtonProps extends TouchableOpacityProps {

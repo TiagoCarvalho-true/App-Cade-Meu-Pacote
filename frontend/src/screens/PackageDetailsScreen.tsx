@@ -1,39 +1,68 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors, Fonts, Sizes } from '../constants/theme';
+import { useRoute, useNavigation } from '@react-navigation/native';
+
+import { Colors, Sizes, Fonts } from '../constants/theme';
 import Timeline from '../components/Timeline';
-import { PackageDetailsScreenProps } from '../navigation/types';
+import { usePackages } from '../hooks/usePackages';
+import { useAuth } from '../hooks/useAuth';
+// import { Package } from '../navigation/types';
 
-const trackingData = {
-  item: {
-    title: 'Goku Super Sayajin 4',
-    subtitle: 'Action figure',
-    storeIcon: require('../assets/images/amazon_logo.png'),
-  },
-  events: [
-    {
-      location: 'Agência dos Correios,\nSão Paulo - SP',
-      timestamp: '02/10/2025 11:45',
-      status: 'Objeto postado',
-      color: '#007AFF',
-    },
-    {
-      location: 'Unidade de Tratamento,\nCuritiba - PR',
-      timestamp: '04/10/2025 15:12',
-      status: 'Objeto em trânsito - por favor aguarde',
-      color: ['#007AFF', Colors.primary],
-    },
-    {
-      location: 'Unidade de Distribuição,\nManaus - AM',
-      timestamp: '06/10/2025 08:30',
-      status: 'Objeto saiu para entrega ao destinatário',
-      color: Colors.primary,
-    },
-  ],
-};
+export default function PackageDetailsScreen() {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { getPackageById, loading } = usePackages();
+  const { user } = useAuth();
 
-const PackageDetailsScreen = ({ navigation }: PackageDetailsScreenProps) => {
+  const [packageDetails, setPackageDetails] = useState<Package | null>(null);
+  const { packageId } = route.params as { packageId: string };
+
+  const getInitials = (name: string) =>
+    name
+      .split(' ')
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
+  const loadPackageDetails = useCallback(async () => {
+    try {
+      const data = await getPackageById(packageId);
+      setPackageDetails(data);
+    } catch (error) {
+      Alert.alert(
+        'Erro',
+        'Não foi possível carregar os detalhes do pacote.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [packageId, getPackageById, navigation]);
+
+  useEffect(() => {
+    loadPackageDetails();
+  }, [loadPackageDetails]);
+
+  if (loading || !packageDetails) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -42,25 +71,28 @@ const PackageDetailsScreen = ({ navigation }: PackageDetailsScreenProps) => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={28} color={Colors.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Details</Text>
+          <Text style={styles.headerTitle}>Detalhes</Text>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>BM</Text>
+            <Text style={styles.avatarText}>{getInitials(user?.name || '??')}</Text>
           </View>
         </View>
 
         <View style={styles.packageSummary}>
-          <Image source={trackingData.item.storeIcon} style={styles.storeIcon} />
+          <Image
+            source={{ uri: packageDetails.storeIconUrl || 'https://via.placeholder.com/50' }}
+            style={styles.storeIcon}
+          />
           <View>
-            <Text style={styles.packageTitle}>{trackingData.item.title}</Text>
-            <Text style={styles.packageSubtitle}>{trackingData.item.subtitle}</Text>
+            <Text style={styles.packageTitle}>{packageDetails.name || 'Nome do Pacote'}</Text>
+            <Text style={styles.packageSubtitle}>{packageDetails.trackingCode}</Text>
           </View>
         </View>
 
-        <Timeline events={trackingData.events} />
+        <Timeline events={packageDetails.events || []} />
       </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -70,6 +102,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -105,8 +142,9 @@ const styles = StyleSheet.create({
   storeIcon: {
     width: 50,
     height: 50,
-    borderRadius: Sizes.base,
+    borderRadius: Sizes.radius,
     marginRight: 15,
+    backgroundColor: Colors.lightGray,
   },
   packageTitle: {
     fontFamily: Fonts.bold,
@@ -119,5 +157,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-
-export default PackageDetailsScreen;

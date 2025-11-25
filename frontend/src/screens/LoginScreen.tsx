@@ -1,217 +1,188 @@
-import React, { useState, useEffect } from 'react'; // <-- NOVO (useEffect)
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Alert, // <-- NOVO
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
 } from 'react-native';
-import { Colors, Fonts, Sizes } from '../constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import { useAuth } from '../hooks/useAuth';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
-import { LoginScreenProps } from '../navigation/types';
-import { useAuth } from '../hooks/useAuth';
+import { AuthStackParamList } from '../navigation/types';
+import { Colors, Sizes } from '../constants/theme';
+import Logo from '../assets/images/logo.png';
 
-// --- NOVO: Imports do Google ---
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-// ------------------------------
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  AuthStackParamList,
+  'Login'
+>;
 
-// NOVO: Permite que o login abra no navegador do celular (WebView)
-WebBrowser.maybeCompleteAuthSession();
-
-const LoginScreen = ({ navigation }: LoginScreenProps) => {
-  // --- Estados do formulário de email ---
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // isLoadingEmail vem do seu hook, renomeei para clareza
-  const { login, isLoading: isLoadingEmail } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { signIn, signInWithGoogle } = useAuth();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
-  // --- NOVO: Estado e Lógica do Google ---
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-
-  // Vamos assumir que o useAuth vai nos dar a nova função
-  // (Vamos ter que adicionar isso ao hook useAuth depois)
-  const { loginWithGoogle } = useAuth();
-
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    // Use os IDs do Google Cloud Console
-    expoClientId: 'SEU_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
-    androidClientId: 'SEU_GOOGLE_ANDROID_CLIENT_ID.apps.googleusercontent.com',
-    iosClientId: 'SEU_GOOGLE_IOS_CLIENT_ID.apps.googleusercontent.com',
-  });
-
-  // Observa a resposta do Google
   useEffect(() => {
-    setIsLoadingGoogle(true);
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
+    GoogleSignin.configure({
+      webClientId: '955704984969-0i17aighfaf4ka1okh7tvpihmi7tttoi.apps.googleusercontent.com', // Cole seu Web Client ID aqui
+    });
+  }, []);
 
-      // Envia o token para o nosso hook de autenticação
-      // que por sua vez o enviará ao nosso backend
-      if (id_token) {
-        handleGoogleLogin(id_token);
-      }
-    } else if (response?.type === 'error') {
-      Alert.alert('Login Falhou', 'Não foi possível conectar ao Google.');
-      setIsLoadingGoogle(false);
-    } else {
-      // Se o usuário fechar a janela do Google (response.type === 'dismiss')
-      setIsLoadingGoogle(false);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
     }
-  }, [response]);
-
-  const handleGoogleLogin = async (idToken: string) => {
-    // A lógica de API fica toda dentro do hook,
-    // a tela só chama a função
-    await loginWithGoogle(idToken);
-
-    // O isLoadingGoogle será desligado pelo próprio hook
-    // (quando a promessa for resolvida, com sucesso ou falha)
-    // Mas, por segurança, podemos desligar aqui caso o hook não o faça.
-    setIsLoadingGoogle(false);
+    setLoading(true);
+    try {
+      await signIn(email, password);
+      // A navegação será tratada pelo AuthProvider
+    } catch (error) {
+      Alert.alert(
+        'Erro no Login',
+        'E-mail ou senha inválidos. Tente novamente.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
-  // --- Fim da Lógica do Google ---
 
-
-  // --- Lógica do Login com Email ---
-  const handleEmailLogin = async () => {
-    await login(email, password);
-    // A navegação é tratada pelo AppNavigator (que ouve o AuthContext)
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const { idToken } = await GoogleSignin.signIn();
+      if (idToken) {
+        await signInWithGoogle(idToken);
+      } else {
+        throw new Error('Não foi possível obter o token do Google.');
+      }
+    } catch (error) {
+      if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Erro', 'Não foi possível fazer login com o Google.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.container}>
-        <Image
-          source={require('../assets/images/logo.png')}
-          style={styles.logo}
-        />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <View style={styles.innerContainer}>
+        <Image source={Logo} style={styles.logo} />
+        <Text style={styles.title}>Bem-vindo ao Cade Meu Pacote</Text>
+        <Text style={styles.subtitle}>Faça login para continuar</Text>
 
-        <Text style={styles.title}>Login</Text>
-
-        {/* --- Formulário de Email/Senha --- */}
         <CustomInput
-          iconName="email-outline"
-          placeholder="Email"
+          iconName="email"
+          placeholder="E-mail"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
-
         <CustomInput
-          iconName="key-variant"
+          iconName="key"
           placeholder="Senha"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
 
-        <TouchableOpacity>
-          <Text style={styles.forgotPassword}>Esqueceu Sua Senha?</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} />
+        ) : (
+          <>
+            <CustomButton title="Entrar" onPress={handleLogin} />
+            <Text style={styles.dividerText}>ou</Text>
+            <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+              <Icon name="google" size={24} color="#FFF" />
+            </TouchableOpacity>
+          </>
+        )}
 
-        <CustomButton
-          isLoading={isLoadingEmail}
-          title="Entrar"
-          onPress={handleEmailLogin}
-        />
-
-        {/* --- NOVO: Divisor "OU" --- */}
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OU</Text>
-          <View style={styles.dividerLine} />
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Não tem uma conta? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.link}>Cadastre-se</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* --- NOVO: Botão de Login do Google --- */}
-        <CustomButton
-          title="Entrar com Google"
-          isLoading={isLoadingGoogle}
-          disabled={!request}
-          onPress={() => {
-            promptAsync(); // Inicia o fluxo do Google
-          }}
-          // Podemos criar um estilo secundário para este botão
-          style={styles.googleButton}
-          textStyle={styles.googleButtonText}
-          iconName="google" // Assumindo que seu CustomButton aceita um ícone
-        />
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerText}>Não tem uma conta? Cadastre-se</Text>
-        </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
-};
+}
 
-// --- NOVO: Estilos Adicionados ---
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  container: {
+  innerContainer: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: Sizes.padding,
   },
   logo: {
-    width: 200,
+    width: 160,
     height: 100,
-    resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   title: {
-    fontFamily: Fonts.bold,
     fontSize: Sizes.h1,
+    fontFamily: 'Poppins_700Bold',
     color: Colors.white,
-    alignSelf: 'center',
-    marginBottom: 30,
-  },
-  forgotPassword: {
-    fontFamily: Fonts.regular,
-    fontSize: 14,
-    color: Colors.lightGray,
-    alignSelf: 'flex-end',
-    marginTop: 5,
-    marginRight: 10,
-  },
-  registerText: {
-    fontFamily: Fonts.regular,
-    color: Colors.lightGray,
     textAlign: 'center',
-    marginTop: 20,
+    marginBottom: Sizes.base,
   },
-
-  // --- NOVOS ESTILOS PARA O LOGIN SOCIAL ---
-  dividerContainer: {
+  subtitle: {
+    fontSize: Sizes.body3,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.gray,
+    textAlign: 'center',
+    marginBottom: Sizes.padding * 2,
+  },
+  footer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 25,
+    justifyContent: 'center',
+    marginTop: Sizes.padding,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.gray,
+  footerText: {
+    color: Colors.gray,
+    fontFamily: 'Poppins_400Regular',
+  },
+  link: {
+    color: Colors.primary,
+    fontFamily: 'Poppins_700Bold',
   },
   dividerText: {
-    fontFamily: Fonts.regular,
-    color: Colors.lightGray,
-    marginHorizontal: 10,
+    color: Colors.gray,
+    textAlign: 'center',
+    marginVertical: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   googleButton: {
-    backgroundColor: Colors.white, // Fundo branco
-  },
-  googleButtonText: {
-    color: Colors.black, // Texto preto
+    backgroundColor: '#DB4437',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
   },
 });
-
-export default LoginScreen;

@@ -1,76 +1,104 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@env';
 
-// Interface para os dados do usuário que vamos armazenar no contexto
+// Define a interface para o usuário e o contexto
 interface User {
-  sub: string;
-  email: string;
+  id: string;
   name: string;
+  email: string;
 }
 
-// Interface para o valor que o nosso contexto vai prover
 interface AuthContextData {
   user: User | null;
   token: string | null;
-  isLoading: boolean; // Para saber se estamos carregando o token do storage
-  signIn(data: { user: User; access_token: string }): Promise<void>;
-  signOut(): Promise<void>;
+  loading: boolean;
+  signInWithGoogle(googleIdToken: string): Promise<void>;
+  signIn(email: string, password: string): Promise<void>;
+  signUp(name: string, email: string, password: string): Promise<void>;
+  signOut(): void;
 }
 
-// Criamos o contexto com um valor padrão
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Efeito para carregar os dados do usuário ao iniciar o app
+  // Carrega o usuário e o token do armazenamento local ao iniciar o app
   useEffect(() => {
     async function loadStorageData() {
-      const storedToken = await AsyncStorage.getItem('@CadeMeuPacote:token');
-      const storedUser = await AsyncStorage.getItem('@CadeMeuPacote:user');
+      const storagedUser = await AsyncStorage.getItem('@App:user');
+      const storagedToken = await AsyncStorage.getItem('@App:token');
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+      if (storagedUser && storagedToken) {
+        setUser(JSON.parse(storagedUser));
+        setToken(storagedToken);
+        // Configura o token em todas as requisições do axios
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storagedToken}`;
       }
-      setIsLoading(false);
+      setLoading(false);
     }
-
     loadStorageData();
   }, []);
 
-  const signIn = async ({ user, access_token }: { user: User; access_token: string }) => {
-    setUser(user);
-    setToken(access_token);
+  const signIn = async (email: string, password: string) => {
+    const response = await axios.post(`${API_URL}/auth/login`, {
+      email,
+      password,
+    });
 
-    // Armazenamos os dados de forma persistente
-    await AsyncStorage.setItem('@CadeMeuPacote:token', access_token);
-    await AsyncStorage.setItem('@CadeMeuPacote:user', JSON.stringify(user));
+    const { token: apiToken, user: apiUser } = response.data;
+
+    setUser(apiUser);
+    setToken(apiToken);
+
+    // Configura o token para futuras requisições
+    axios.defaults.headers.common['Authorization'] = `Bearer ${apiToken}`;
+
+    // Salva os dados no armazenamento local
+    await AsyncStorage.setItem('@App:user', JSON.stringify(apiUser));
+    await AsyncStorage.setItem('@App:token', apiToken);
+  };
+
+  const signUp = async (name: string, email: string, password: string) => {
+    // A rota de criação de usuário geralmente não retorna o token direto
+    // O usuário precisará fazer login após o cadastro
+    await axios.post(`${API_URL}/users`, {
+      name,
+      email,
+      password,
+    });
+  };
+  const signInWithGoogle = async (googleIdToken: string) => {
+    const response = await axios.post(`${API_URL}/auth/google/login`, {
+      token: googleIdToken,
+    });
+
+    const { token: apiToken, user: apiUser } = response.data;
+
+    setUser(apiUser);
+    setToken(apiToken);
+
+    axios.defaults.headers.common['Authorization'] = `Bearer ${apiToken}`;
+
+    await AsyncStorage.setItem('@App:user', JSON.stringify(apiUser));
+    await AsyncStorage.setItem('@App:token', apiToken);
   };
 
   const signOut = async () => {
-    // Limpamos o storage e o estado
-    await AsyncStorage.removeItem('@CadeMeuPacote:token');
-    await AsyncStorage.removeItem('@CadeMeuPacote:user');
+    await AsyncStorage.clear();
     setUser(null);
     setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, signOut, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook customizado para facilitar o uso do contexto
-export function useAuthContext(): AuthContextData {
-  const context = useContext(AuthContext);
-  return context;
-}
+export default AuthContext;
