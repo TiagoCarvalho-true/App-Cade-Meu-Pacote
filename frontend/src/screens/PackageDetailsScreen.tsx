@@ -88,7 +88,7 @@ export default function PackageDetailsScreen() {
           </View>
         </View>
 
-        <Timeline events={packageDetails.events || []} />
+        <Timeline events={packageDetails.timeline || []} />
       </View>
     </SafeAreaView>
   );

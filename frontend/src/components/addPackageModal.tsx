@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Colors, Fonts, Sizes } from '../constants/theme';
 import CustomInput from './CustomInput';
 import CustomButton from './CustomButton';
+import { usePackages } from '../hooks/usePackages';
 
 interface AddPackageModalProps {
   visible: boolean;
   onClose: () => void;
+  onPackageAdded?: () => void;
 }
 
 const productTypes = [
@@ -14,8 +16,28 @@ const productTypes = [
   'Informática', 'Celulares', 'Móveis', 'Esporte'
 ];
 
-const AddPackageModal: React.FC<AddPackageModalProps> = ({ visible, onClose }) => {
+const AddPackageModal: React.FC<AddPackageModalProps> = ({ visible, onClose, onPackageAdded }) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [trackingCode, setTrackingCode] = useState('');
+  const { createPackage, isLoading } = usePackages();
+
+  const handleCreate = async () => {
+    if (!name || !trackingCode) {
+      Alert.alert('Erro', 'Preencha todos os campos.');
+      return;
+    }
+
+    const result = await createPackage(name, trackingCode);
+    if (result) {
+      Alert.alert('Sucesso', 'Pacote adicionado com sucesso!');
+      setName('');
+      setTrackingCode('');
+      setSelectedType(null);
+      if (onPackageAdded) onPackageAdded();
+      onClose();
+    }
+  };
 
   return (
     <Modal
@@ -31,11 +53,15 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ visible, onClose }) =
               iconName="cube-outline"
               iconColor={Colors.primary}
               placeholder="Nome"
+              value={name}
+              onChangeText={setName}
             />
             <CustomInput
               iconName="barcode-scan"
               iconColor={Colors.primary}
               placeholder="Código do Produto"
+              value={trackingCode}
+              onChangeText={setTrackingCode}
             />
 
             <Text style={styles.sectionTitle}>Tipo de Produto</Text>
@@ -61,7 +87,11 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ visible, onClose }) =
               <Text style={styles.darkRedButtonText}>Inserir Mais</Text>
             </TouchableOpacity>
 
-            <CustomButton title="Criar Pedido" onPress={() => { onClose(); }} />
+            {isLoading ? (
+              <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+            ) : (
+              <CustomButton title="Criar Pedido" onPress={handleCreate} />
+            )}
 
             <TouchableOpacity style={styles.redButton} onPress={onClose}>
               <Text style={styles.redButtonText}>Sair</Text>
