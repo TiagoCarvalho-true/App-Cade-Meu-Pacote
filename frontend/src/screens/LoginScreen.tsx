@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../hooks/useAuth';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
-import { AuthStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 import { Colors, Sizes } from '../constants/theme';
 import Logo from '../assets/images/logo.png';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
-  AuthStackParamList,
+  RootStackParamList,
   'Login'
 >;
 
@@ -31,7 +31,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      await signIn(email, password);
+      await login(email, password);
       // A navegação será tratada pelo AuthProvider
     } catch (error) {
       Alert.alert(
@@ -65,11 +65,11 @@ export default function LoginScreen() {
       await GoogleSignin.hasPlayServices();
       const { idToken } = await GoogleSignin.signIn();
       if (idToken) {
-        await signInWithGoogle(idToken);
+        await loginWithGoogle(idToken);
       } else {
         throw new Error('Não foi possível obter o token do Google.');
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
         Alert.alert('Erro', 'Não foi possível fazer login com o Google.');
       }

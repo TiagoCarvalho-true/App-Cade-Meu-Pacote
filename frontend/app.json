@@ -7,21 +7,6 @@
     "icon": "./src/assets/images/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#1C1C1E"
-    },
-    "assetBundlePatterns": [
-      "src/assets/**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "googleServicesFile": "./GoogleService-Info.plist"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "package": "com.seuapp.cademeupacote"
       },
       "package": "com.seuapp.cademeupacote",
       "googleServicesFile": "./google-services.json"
@@ -39,4 +24,3 @@
     ],
     "owner": "bruno_marinho"
   }
-}
