@@ -12,7 +12,7 @@
       "googleServicesFile": "./google-services.json"
     },
     "web": {
-      "favicon": "./src/assets/favicon.png"
+      "favicon": "./src/assets/images/icon.png"
     },
     "extra": {
       "eas": {

@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
   const signInWithGoogle = async (googleIdToken: string) => {
-    const response = await axios.post(`${API_URL}/auth/google/login`, {
+    const response = await axios.post(`${API_URL}/auth/google`, {
       token: googleIdToken,
     });
 
