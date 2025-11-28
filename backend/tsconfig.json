@@ -20,7 +20,7 @@
         "src/*"
       ]
     },
-    "rootDir": "./src",
+    "rootDir": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -28,5 +28,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/test",
+    "**/*spec.ts"
+  ]
 }

@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
   const signInWithGoogle = async (googleIdToken: string) => {
-    const response = await axios.post(`${API_URL}/auth/google/login`, {
+    const response = await axios.post(`${API_URL}/auth/google`, {
       token: googleIdToken,
     });
 
@@ -100,5 +100,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export function useAuthContext() {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+}
 
 export default AuthContext;

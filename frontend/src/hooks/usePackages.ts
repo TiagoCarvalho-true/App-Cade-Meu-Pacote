@@ -46,5 +46,56 @@ export const usePackages = () => {
   }, [token]); // A função é recriada se o token mudar
 
   // O hook retorna a função para buscar os dados e os estados de controle
-  return { getPackages, isLoading, error };
+  const getPackageById = useCallback(async (id: string) => {
+    if (!token) return null;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/packages/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erro ao buscar pacote.');
+      return data;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro de conexão.';
+      setError(errorMessage);
+      Alert.alert('Erro', errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  const createPackage = useCallback(async (name: string, trackingCode: string) => {
+    if (!token) return null;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/packages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, trackingCode }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erro ao criar pacote.');
+      return data;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro de conexão.';
+      setError(errorMessage);
+      Alert.alert('Erro', errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  return { getPackages, getPackageById, createPackage, isLoading, error };
 };
